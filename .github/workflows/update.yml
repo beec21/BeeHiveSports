@@ -2,14 +2,14 @@ name: Weekly Update (API)
 
 on:
   schedule:
-    - cron: "0 12 * * 2" # Runs every Tuesday at noon UTC
+    - cron: "0 12 * * 2" # every Tuesday
   workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -18,39 +18,18 @@ jobs:
           python-version: "3.x"
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip requests
+        run: pip install requests
 
-      - name: Fetch NFL Data
+      - name: Run update script
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-        run: |
-          import requests, json
+        run: python update_data.py
 
-          headers = {"x-api-key": "${{ secrets.ODDS_API_KEY }}"}
-
-          # NFL player stats (you can change the region or endpoint later)
-          player_url = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?regions=us&markets=h2h"
-          team_url = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?regions=us&markets=spreads"
-
-          try:
-              player_data = requests.get(player_url, headers=headers).json()
-              team_data = requests.get(team_url, headers=headers).json()
-
-              with open("currentWeeklyData.json", "w") as f:
-                  json.dump(player_data, f, indent=2)
-
-              with open("defenseStats.json", "w") as f:
-                  json.dump(team_data, f, indent=2)
-
-          except Exception as e:
-              print("Error fetching data:", e)
-
-      - name: Commit and push
+      - name: Commit and push updates
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "github-actions"
           git add currentWeeklyData.json defenseStats.json
-          git commit -m "Auto update fantasy + defense stats" || echo "No changes to commit"
+          git commit -m "Auto update stats via Odds API" || echo "No changes to commit"
           git push
 
