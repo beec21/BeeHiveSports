@@ -1,0 +1,28 @@
+name: Weekly Update (API)
+
+on:
+  schedule:
+    - cron: "0 22 * * 3,5" # Wednesdays & Fridays @ 5 PM CT
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Update player + defense data
+        run: |
+          echo "Fetching player data..."
+          curl -s "${{ secrets.PLAYER_STATS_URL }}" -o currentWeeklyData.json
+          echo "Fetching defense data..."
+          curl -s "${{ secrets.TEAM_DEFENSE_URL }}" -o defenseStats.json
+
+      - name: Commit and push updates
+        run: |
+          git config --global user.name "BeeHiveSports Bot"
+          git config --global user.email "beehive@users.noreply.github.com"
+          git add currentWeeklyData.json defenseStats.json
+          git commit -m "Auto update fantasy + defense stats"
+          git push
