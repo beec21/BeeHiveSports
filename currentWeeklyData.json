@@ -1,4 +1,5 @@
-[
-  { "player": "Patrick Mahomes", "position": "QB", "ppg": 25.1 },
-  { "player": "Christian McCaffrey", "position": "RB", "ppg": 23.7 }
-]
+{
+  "message": "API key is missing",
+  "error_code": "MISSING_KEY",
+  "details_url": "https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#missing-key"
+}
