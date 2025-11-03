@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Patrick Mahomes",
+    "pos": "QB",
+    "team": "KC",
+    "ppg": 25.3
+  },
+  {
+    "name": "Christian McCaffrey",
+    "pos": "RB",
+    "team": "SF",
+    "ppg": 22.4
+  }
+]
