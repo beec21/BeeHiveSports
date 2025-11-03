@@ -2,7 +2,7 @@ name: Weekly Update (API)
 
 on:
   schedule:
-    - cron: "0 22 * * 3,5" # Wednesdays & Fridays @ 5 PM CT
+    - cron: "0 12 * * 1" # runs every Monday at noon UTC
   workflow_dispatch:
 
 jobs:
@@ -12,17 +12,38 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Update player + defense data
-        run: |
-          echo "Fetching player data..."
-          curl -s "${{ secrets.PLAYER_STATS_URL }}" -o currentWeeklyData.json
-          echo "Fetching defense data..."
-          curl -s "${{ secrets.TEAM_DEFENSE_URL }}" -o defenseStats.json
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
 
-      - name: Commit and push updates
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch player & defense data
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
-          git config --global user.name "BeeHiveSports Bot"
-          git config --global user.email "beehive@users.noreply.github.com"
+          import requests, json
+
+          # Example URLs (replace if needed)
+          PLAYER_STATS_URL = f"https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey={env['ODDS_API_KEY']}&regions=us"
+          TEAM_DEFENSE_URL = f"https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey={env['ODDS_API_KEY']}&regions=us"
+
+          def save_json(url, filename):
+              r = requests.get(url)
+              r.raise_for_status()
+              data = r.json()
+              with open(filename, "w") as f:
+                  json.dump(data, f, indent=2)
+
+          save_json(PLAYER_STATS_URL, "currentWeeklyData.json")
+          save_json(TEAM_DEFENSE_URL, "defenseStats.json")
+
+      - name: Commit and push data
+        run: |
+          git config user.name "BeeHiveSports Bot"
+          git config user.email "actions@github.com"
           git add currentWeeklyData.json defenseStats.json
-          git commit -m "Auto update fantasy + defense stats"
+          git commit -m "Auto update fantasy + defense stats" || echo "No changes"
           git push
